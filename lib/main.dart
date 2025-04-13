@@ -40,6 +40,13 @@ class _MyHomePageState extends State<MyHomePage> {
     rightSymbol: ' BGN',
   );
 
+  // === Helpers ===
+  int _getRemainingDaysInMonth() {
+    final now = DateTime.now();
+    final lastDay = DateTime(now.year, now.month + 1, 0);
+    return lastDay.day - now.day + 1; // +1 to include current day
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -55,6 +62,14 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             // Daily budget title.
             const Text('Daily grocery budget'),
+            // Display the days left in the month.
+            Text(
+              'Days left: ${_getRemainingDaysInMonth()}',
+              style: const TextStyle(
+                fontSize: 18.0,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
             // Daily budget input field.
             Padding(
               padding: const EdgeInsets.symmetric(
