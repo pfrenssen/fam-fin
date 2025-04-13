@@ -117,7 +117,10 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ProfilePage()),
-                ).then((_) => _loadProfileImage());
+                )
+                // Make sure to reload the profile image after returning from
+                // the profile page, since the image might have changed.
+                .then((_) => _loadProfileImage());
               },
               child: CircleAvatar(
                 backgroundImage:
