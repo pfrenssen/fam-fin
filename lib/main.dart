@@ -3,6 +3,7 @@ import 'package:extended_masked_text/extended_masked_text.dart';
 import 'dart:io';
 import 'pages/profile_page.dart';
 import 'services/user_preferences_service.dart';
+import 'services/retirement_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -40,7 +41,10 @@ enum FrequencyPeriod { week, month, year }
 
 class _MyHomePageState extends State<MyHomePage> {
   final _prefsService = UserPreferencesService();
+  final _retirementService = RetirementService();
   String? _profileImagePath;
+  DateTime? _birthDate;
+  int _retirementAge = 65;
 
   // === State ===
   String? _dailyBudget;
@@ -85,20 +89,21 @@ class _MyHomePageState extends State<MyHomePage> {
     }
   }
 
-  String _getFrequencyLabel() {
-    return '$_frequencyCount per ${_frequencyPeriod.name}';
-  }
-
   @override
   void initState() {
     super.initState();
-    _loadProfileImage();
+    _loadUserPreferences();
   }
 
-  Future<void> _loadProfileImage() async {
+  Future<void> _loadUserPreferences() async {
     final imagePath = await _prefsService.getProfileImagePath();
+    final birthDate = await _prefsService.getBirthDate();
+    final retirementAge = await _prefsService.getRetirementAge();
+
     setState(() {
       _profileImagePath = imagePath;
+      _birthDate = birthDate;
+      _retirementAge = retirementAge;
     });
   }
 
@@ -118,9 +123,9 @@ class _MyHomePageState extends State<MyHomePage> {
                   context,
                   MaterialPageRoute(builder: (context) => const ProfilePage()),
                 )
-                // Make sure to reload the profile image after returning from
-                // the profile page, since the image might have changed.
-                .then((_) => _loadProfileImage());
+                // Make sure to reload the user preferences after returning from
+                // the profile page, since the preferences might have changed.
+                .then((_) => _loadUserPreferences());
               },
               child: CircleAvatar(
                 backgroundImage:
@@ -355,6 +360,12 @@ class _MyHomePageState extends State<MyHomePage> {
                             ],
                           ),
                         ),
+                      const SizedBox(height: 16.0),
+                      Text(
+                        'Time until retirement: ${_retirementService.formatDaysUntilRetirement(_birthDate, _retirementAge)}',
+                        style: Theme.of(context).textTheme.bodySmall,
+                        textAlign: TextAlign.center,
+                      ),
                     ],
                   ),
                 ),
