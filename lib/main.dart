@@ -31,6 +31,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // === Controllers ===
   final _controller = MoneyMaskedTextController(
     decimalSeparator: '.',
     thousandSeparator: ',',
@@ -42,23 +43,37 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      // === App Bar ===
       appBar: AppBar(
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
+      // === Main Content ===
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // Daily budget title.
             const Text('Daily grocery budget'),
+            // Daily budget input field.
             Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32.0,
+                vertical: 16.0,
+              ),
               child: TextField(
+                key: const Key('budget_input'),
                 controller: _controller,
                 keyboardType: TextInputType.number,
+                style: const TextStyle(fontSize: 24.0),
                 decoration: const InputDecoration(
                   labelText: 'Shared account budget',
+                  labelStyle: TextStyle(fontSize: 18.0),
                   border: OutlineInputBorder(),
+                  contentPadding: EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 24.0,
+                  ),
                 ),
               ),
             ),
