@@ -31,6 +31,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  // === State ===
+  String? _dailyBudget;
+
   // === Controllers ===
   final _controller = MoneyMaskedTextController(
     decimalSeparator: '.',
@@ -45,6 +48,17 @@ class _MyHomePageState extends State<MyHomePage> {
     final now = DateTime.now();
     final lastDay = DateTime(now.year, now.month + 1, 0);
     return lastDay.day - now.day + 1; // +1 to include current day
+  }
+
+  void _calculateDailyBudget() {
+    final total = _controller.numberValue;
+    final days = _getRemainingDaysInMonth();
+    if (total > 0) {
+      final daily = total / days;
+      setState(() {
+        _dailyBudget = '${daily.toStringAsFixed(2)} BGN';
+      });
+    }
   }
 
   @override
@@ -80,16 +94,17 @@ class _MyHomePageState extends State<MyHomePage> {
                 fontWeight: FontWeight.w500,
               ),
             ),
-            // Daily budget input field.
+            // Remaining budget input field.
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: 32.0,
                 vertical: 16.0,
               ),
               child: TextField(
-                key: const Key('budget_input'),
+                key: const Key('total_remaining_budget_input'),
                 controller: _controller,
                 keyboardType: TextInputType.number,
+                onChanged: (_) => _calculateDailyBudget(),
                 style: const TextStyle(fontSize: 24.0),
                 decoration: const InputDecoration(
                   labelText: 'Shared account budget',
@@ -102,6 +117,18 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
             ),
+            if (_dailyBudget != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 16.0),
+                child: Text(
+                  'Daily budget: $_dailyBudget',
+                  style: const TextStyle(
+                    fontSize: 24.0,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.green,
+                  ),
+                ),
+              ),
           ],
         ),
       ),
