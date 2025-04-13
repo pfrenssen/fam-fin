@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:extended_masked_text/extended_masked_text.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,6 +31,14 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _controller = MoneyMaskedTextController(
+    decimalSeparator: '.',
+    thousandSeparator: ',',
+    precision: 2,
+    initialValue: 0,
+    rightSymbol: ' BGN',
+  );
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -37,7 +46,25 @@ class _MyHomePageState extends State<MyHomePage> {
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
         title: Text(widget.title),
       ),
-      body: const Center(child: Text('Welcome to Family Finance')),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text('Daily grocery budget'),
+            Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: TextField(
+                controller: _controller,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                  labelText: 'Shared account budget',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
