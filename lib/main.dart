@@ -34,6 +34,10 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+enum PurchaseType { oneTime, recurring }
+
+enum FrequencyPeriod { week, month, year }
+
 class _MyHomePageState extends State<MyHomePage> {
   static const String _profileImageKey = 'profile_image_path';
   String? _profileImagePath;
@@ -41,6 +45,11 @@ class _MyHomePageState extends State<MyHomePage> {
   // === State ===
   String? _dailyBudget;
   String _selectedCurrency = 'BGN';
+
+  // Add these to your state variables
+  PurchaseType _purchaseType = PurchaseType.oneTime;
+  int _frequencyCount = 1;
+  FrequencyPeriod _frequencyPeriod = FrequencyPeriod.month;
 
   // === Controllers ===
   final _controller = MoneyMaskedTextController(
@@ -74,6 +83,10 @@ class _MyHomePageState extends State<MyHomePage> {
         _dailyBudget = '${daily.toStringAsFixed(2)} BGN';
       });
     }
+  }
+
+  String _getFrequencyLabel() {
+    return '$_frequencyCount per ${_frequencyPeriod.name}';
   }
 
   @override
@@ -207,6 +220,25 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                       const SizedBox(height: 16.0),
+                      SegmentedButton<PurchaseType>(
+                        segments: const [
+                          ButtonSegment(
+                            value: PurchaseType.oneTime,
+                            label: Text('One Time'),
+                          ),
+                          ButtonSegment(
+                            value: PurchaseType.recurring,
+                            label: Text('Recurring'),
+                          ),
+                        ],
+                        selected: {_purchaseType},
+                        onSelectionChanged: (Set<PurchaseType> selection) {
+                          setState(() {
+                            _purchaseType = selection.first;
+                          });
+                        },
+                      ),
+                      const SizedBox(height: 16.0),
                       Row(
                         children: [
                           Expanded(
@@ -252,6 +284,67 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ],
                       ),
+                      if (_purchaseType == PurchaseType.recurring)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: Row(
+                            children: [
+                              Expanded(
+                                flex: 1,
+                                child: DropdownButtonFormField<int>(
+                                  value: _frequencyCount,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Frequency',
+                                  ),
+                                  items:
+                                      List.generate(12, (index) => index + 1)
+                                          .map(
+                                            (count) => DropdownMenuItem(
+                                              value: count,
+                                              child: Text(count.toString()),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _frequencyCount = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 16.0),
+                              Expanded(
+                                flex: 2,
+                                child: DropdownButtonFormField<FrequencyPeriod>(
+                                  value: _frequencyPeriod,
+                                  decoration: const InputDecoration(
+                                    border: OutlineInputBorder(),
+                                    labelText: 'Period',
+                                  ),
+                                  items:
+                                      FrequencyPeriod.values
+                                          .map(
+                                            (period) => DropdownMenuItem(
+                                              value: period,
+                                              child: Text(period.name),
+                                            ),
+                                          )
+                                          .toList(),
+                                  onChanged: (value) {
+                                    if (value != null) {
+                                      setState(() {
+                                        _frequencyPeriod = value;
+                                      });
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                     ],
                   ),
                 ),
