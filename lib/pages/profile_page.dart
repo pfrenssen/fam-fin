@@ -16,9 +16,11 @@ class _ProfilePageState extends State<ProfilePage> {
   static const String _nameKey = 'user_name';
   static const String _birthDateKey = 'user_birth_date';
   static const String _profileImageKey = 'profile_image_path';
+  static const String _retirementAgeKey = 'retirement_age';
   String _name = 'My name';
   DateTime? _birthDate;
   String? _profileImagePath;
+  int _retirementAge = 65;
 
   @override
   void initState() {
@@ -26,6 +28,7 @@ class _ProfilePageState extends State<ProfilePage> {
     _loadName();
     _loadBirthDate();
     _loadProfileImage();
+    _loadRetirementAge();
   }
 
   Future<void> _loadName() async {
@@ -50,6 +53,13 @@ class _ProfilePageState extends State<ProfilePage> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       _profileImagePath = prefs.getString(_profileImageKey);
+    });
+  }
+
+  Future<void> _loadRetirementAge() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _retirementAge = prefs.getInt(_retirementAgeKey) ?? 65;
     });
   }
 
@@ -110,6 +120,21 @@ class _ProfilePageState extends State<ProfilePage> {
     }
   }
 
+  Future<void> _updateRetirementAge() async {
+    final int? newAge = await showDialog<int>(
+      context: context,
+      builder: (context) => _RetirementAgeDialog(initialAge: _retirementAge),
+    );
+
+    if (newAge != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_retirementAgeKey, newAge);
+      setState(() {
+        _retirementAge = newAge;
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -157,6 +182,13 @@ class _ProfilePageState extends State<ProfilePage> {
               trailing: const Icon(Icons.edit),
               onTap: _updateBirthDate,
             ),
+            ListTile(
+              leading: const Icon(Icons.elderly),
+              title: const Text('Retirement age'),
+              subtitle: Text('$_retirementAge years'),
+              trailing: const Icon(Icons.edit),
+              onTap: _updateRetirementAge,
+            ),
           ],
         ),
       ),
@@ -203,6 +235,58 @@ class _NameEditDialogState extends State<_NameEditDialog> {
         ),
         TextButton(
           onPressed: () => Navigator.of(context).pop(_controller.text),
+          child: const Text('Save'),
+        ),
+      ],
+    );
+  }
+}
+
+class _RetirementAgeDialog extends StatefulWidget {
+  final int initialAge;
+
+  const _RetirementAgeDialog({required this.initialAge});
+
+  @override
+  State<_RetirementAgeDialog> createState() => _RetirementAgeDialogState();
+}
+
+class _RetirementAgeDialogState extends State<_RetirementAgeDialog> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initialAge.toString());
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      content: TextField(
+        controller: _controller,
+        keyboardType: TextInputType.number,
+        autofocus: true,
+        decoration: const InputDecoration(labelText: 'Age'),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            final age = int.tryParse(_controller.text);
+            if (age != null && age > 0 && age < 100) {
+              Navigator.of(context).pop(age);
+            }
+          },
           child: const Text('Save'),
         ),
       ],
