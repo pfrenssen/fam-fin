@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import '../services/user_preferences_service.dart';
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -13,10 +14,7 @@ class ProfilePage extends StatefulWidget {
 }
 
 class _ProfilePageState extends State<ProfilePage> {
-  static const String _nameKey = 'user_name';
-  static const String _birthDateKey = 'user_birth_date';
-  static const String _profileImageKey = 'profile_image_path';
-  static const String _retirementAgeKey = 'retirement_age';
+  final _prefsService = UserPreferencesService();
   String _name = 'My name';
   DateTime? _birthDate;
   String? _profileImagePath;
@@ -25,53 +23,25 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   void initState() {
     super.initState();
-    _loadName();
-    _loadBirthDate();
-    _loadProfileImage();
-    _loadRetirementAge();
+    _loadPreferences();
   }
 
-  Future<void> _loadName() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _name = prefs.getString(_nameKey) ?? 'My name';
-    });
-  }
-
-  Future<void> _loadBirthDate() async {
-    final prefs = await SharedPreferences.getInstance();
-    final timestamp = prefs.getInt(_birthDateKey);
-    setState(() {
-      _birthDate =
-          timestamp != null
-              ? DateTime.fromMillisecondsSinceEpoch(timestamp)
-              : null;
-    });
-  }
-
-  Future<void> _loadProfileImage() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _profileImagePath = prefs.getString(_profileImageKey);
-    });
-  }
-
-  Future<void> _loadRetirementAge() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _retirementAge = prefs.getInt(_retirementAgeKey) ?? 65;
-    });
+  Future<void> _loadPreferences() async {
+    _name = await _prefsService.getName();
+    _birthDate = await _prefsService.getBirthDate();
+    _profileImagePath = await _prefsService.getProfileImagePath();
+    _retirementAge = await _prefsService.getRetirementAge();
+    setState(() {});
   }
 
   Future<void> _updateName() async {
-    final prefs = await SharedPreferences.getInstance();
     final newName = await showDialog<String>(
       context: context,
       builder: (context) => _NameEditDialog(initialName: _name),
     );
 
     if (newName != null) {
-      await prefs.setString(_nameKey, newName);
+      await _prefsService.setName(newName);
       setState(() {
         _name = newName;
       });
@@ -87,8 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (picked != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_birthDateKey, picked.millisecondsSinceEpoch);
+      await _prefsService.setBirthDate(picked);
       setState(() {
         _birthDate = picked;
       });
@@ -110,9 +79,7 @@ class _ProfilePageState extends State<ProfilePage> {
       final imagePath = '${directory.path}/$imageName';
 
       await File(image.path).copy(imagePath);
-
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_profileImageKey, imagePath);
+      await _prefsService.setProfileImagePath(imagePath);
 
       setState(() {
         _profileImagePath = imagePath;
@@ -127,8 +94,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
 
     if (newAge != null) {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(_retirementAgeKey, newAge);
+      await _prefsService.setRetirementAge(newAge);
       setState(() {
         _retirementAge = newAge;
       });

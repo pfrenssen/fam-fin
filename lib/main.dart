@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:extended_masked_text/extended_masked_text.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:io';
 import 'pages/profile_page.dart';
+import 'services/user_preferences_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,7 +39,7 @@ enum PurchaseType { oneTime, recurring }
 enum FrequencyPeriod { week, month, year }
 
 class _MyHomePageState extends State<MyHomePage> {
-  static const String _profileImageKey = 'profile_image_path';
+  final _prefsService = UserPreferencesService();
   String? _profileImagePath;
 
   // === State ===
@@ -96,9 +96,9 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> _loadProfileImage() async {
-    final prefs = await SharedPreferences.getInstance();
+    final imagePath = await _prefsService.getProfileImagePath();
     setState(() {
-      _profileImagePath = prefs.getString(_profileImageKey);
+      _profileImagePath = imagePath;
     });
   }
 
