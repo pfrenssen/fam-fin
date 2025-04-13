@@ -318,7 +318,14 @@ class _MyHomePageState extends State<MyHomePage> {
                                   },
                                 ),
                               ),
-                              const SizedBox(width: 16.0),
+                              const Expanded(
+                                flex: 1,
+                                child: Text(
+                                  'per',
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(fontSize: 18.0),
+                                ),
+                              ),
                               Expanded(
                                 flex: 2,
                                 child: DropdownButtonFormField<FrequencyPeriod>(
