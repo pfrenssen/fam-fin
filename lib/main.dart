@@ -4,6 +4,7 @@ import 'dart:io';
 import 'pages/profile_page.dart';
 import 'services/user_preferences_service.dart';
 import 'services/retirement_service.dart';
+import 'models/frequency_period.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,8 +38,6 @@ class MyHomePage extends StatefulWidget {
 
 enum PurchaseType { oneTime, recurring }
 
-enum FrequencyPeriod { week, month, year }
-
 class _MyHomePageState extends State<MyHomePage> {
   final _prefsService = UserPreferencesService();
   final _retirementService = RetirementService();
@@ -50,10 +49,15 @@ class _MyHomePageState extends State<MyHomePage> {
   String? _dailyBudget;
   String _selectedCurrency = 'BGN';
 
-  // Add these to your state variables
   PurchaseType _purchaseType = PurchaseType.oneTime;
   int _frequencyCount = 1;
   FrequencyPeriod _frequencyPeriod = FrequencyPeriod.month;
+
+  double? _opportunityInvested;
+  double? _opportunityInterest;
+  double? _opportunityTotal;
+
+  bool _showOpportunityDetails = false;
 
   // === Controllers ===
   final _controller = MoneyMaskedTextController(
@@ -87,6 +91,39 @@ class _MyHomePageState extends State<MyHomePage> {
         _dailyBudget = '${daily.toStringAsFixed(2)} BGN';
       });
     }
+  }
+
+  void _calculateOpportunityCost() {
+    final amount = _opportunityController.numberValue;
+    if (amount <= 0) {
+      setState(() {
+        _opportunityInvested = null;
+        _opportunityInterest = null;
+        _opportunityTotal = null;
+      });
+      return;
+    }
+
+    final result =
+        _purchaseType == PurchaseType.oneTime
+            ? _retirementService.calculateOneTimeOpportunityCost(
+              amount,
+              _birthDate,
+              _retirementAge,
+            )
+            : _retirementService.calculateRecurringOpportunityCost(
+              amount,
+              _birthDate,
+              _retirementAge,
+              _frequencyCount,
+              _frequencyPeriod,
+            );
+
+    setState(() {
+      _opportunityInvested = result.invested;
+      _opportunityInterest = result.interest;
+      _opportunityTotal = result.total;
+    });
   }
 
   @override
@@ -243,6 +280,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         onSelectionChanged: (Set<PurchaseType> selection) {
                           setState(() {
                             _purchaseType = selection.first;
+                            _calculateOpportunityCost();
                           });
                         },
                       ),
@@ -260,6 +298,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                 labelStyle: TextStyle(fontSize: 18.0),
                                 border: OutlineInputBorder(),
                               ),
+                              onChanged: (_) => _calculateOpportunityCost(),
                             ),
                           ),
                           const SizedBox(width: 16.0),
@@ -318,6 +357,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     if (value != null) {
                                       setState(() {
                                         _frequencyCount = value;
+                                        _calculateOpportunityCost();
                                       });
                                     }
                                   },
@@ -352,6 +392,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     if (value != null) {
                                       setState(() {
                                         _frequencyPeriod = value;
+                                        _calculateOpportunityCost();
                                       });
                                     }
                                   },
@@ -361,11 +402,51 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ),
                       const SizedBox(height: 16.0),
-                      Text(
-                        'Time until retirement: ${_retirementService.formatDaysUntilRetirement(_birthDate, _retirementAge)}',
-                        style: Theme.of(context).textTheme.bodySmall,
-                        textAlign: TextAlign.center,
-                      ),
+                      if (_opportunityTotal != null) ...[
+                        Text(
+                          '${_opportunityTotal?.toStringAsFixed(2)} $_selectedCurrency',
+                          style: Theme.of(
+                            context,
+                          ).textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 32.0,
+                          ),
+                        ),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            setState(() {
+                              _showOpportunityDetails =
+                                  !_showOpportunityDetails;
+                            });
+                          },
+                          icon: Icon(
+                            _showOpportunityDetails
+                                ? Icons.keyboard_arrow_up
+                                : Icons.keyboard_arrow_down,
+                          ),
+                          label: Text(
+                            _showOpportunityDetails
+                                ? 'Hide details'
+                                : 'Show details',
+                          ),
+                        ),
+                        if (_showOpportunityDetails) ...[
+                          Text(
+                            'Invested: ${_opportunityInvested?.toStringAsFixed(2)} $_selectedCurrency',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          Text(
+                            'Interest earned: ${_opportunityInterest?.toStringAsFixed(2)} $_selectedCurrency',
+                            style: Theme.of(context).textTheme.bodyMedium
+                                ?.copyWith(color: Colors.green),
+                          ),
+                          Text(
+                            'Time until retirement: ${_retirementService.formatDaysUntilRetirement(_birthDate, _retirementAge)}',
+                            style: Theme.of(context).textTheme.bodySmall,
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
