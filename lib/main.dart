@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:extended_masked_text/extended_masked_text.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
 import 'pages/profile_page.dart';
 
 void main() {
@@ -33,6 +35,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  static const String _profileImageKey = 'profile_image_path';
+  String? _profileImagePath;
+
   // === State ===
   String? _dailyBudget;
 
@@ -64,6 +69,19 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   @override
+  void initState() {
+    super.initState();
+    _loadProfileImage();
+  }
+
+  Future<void> _loadProfileImage() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _profileImagePath = prefs.getString(_profileImageKey);
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       // === App Bar ===
@@ -78,9 +96,16 @@ class _MyHomePageState extends State<MyHomePage> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(builder: (context) => const ProfilePage()),
-                );
+                ).then((_) => _loadProfileImage());
               },
-              child: const CircleAvatar(child: Icon(Icons.person)),
+              child: CircleAvatar(
+                backgroundImage:
+                    _profileImagePath != null
+                        ? FileImage(File(_profileImagePath!))
+                        : null,
+                child:
+                    _profileImagePath == null ? const Icon(Icons.person) : null,
+              ),
             ),
           ),
         ],
