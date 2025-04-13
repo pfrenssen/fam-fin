@@ -1,4 +1,21 @@
 class RetirementService {
+  /// Calculates the number of days until retirement based on the birth date and
+  /// retirement age.
+  int calculateDaysUntilRetirement(DateTime? birthDate, int retirementAge) {
+    if (birthDate == null) return 0;
+
+    final retirementDate = DateTime(
+      birthDate.year + retirementAge,
+      birthDate.month,
+      birthDate.day,
+    );
+    final now = DateTime.now();
+
+    if (retirementDate.isBefore(now)) return 0;
+
+    return retirementDate.difference(now).inDays;
+  }
+
   (int years, int months, int days) calculateTimeUntilRetirement(
     DateTime? birthDate,
     int retirementAge,
