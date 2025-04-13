@@ -60,8 +60,18 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Daily budget title.
-            const Text('Daily grocery budget'),
+            // Daily budget title
+            Padding(
+              padding: const EdgeInsets.only(bottom: 5.0),
+              child: Text(
+                'Daily Grocery Budget',
+                style: const TextStyle(
+                  fontSize: 32.0,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black87,
+                ),
+              ),
+            ),
             // Display the days left in the month.
             Text(
               'Days left: ${_getRemainingDaysInMonth()}',
