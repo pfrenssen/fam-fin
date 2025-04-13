@@ -40,6 +40,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   // === State ===
   String? _dailyBudget;
+  String _selectedCurrency = 'BGN';
 
   // === Controllers ===
   final _controller = MoneyMaskedTextController(
@@ -48,6 +49,13 @@ class _MyHomePageState extends State<MyHomePage> {
     precision: 2,
     initialValue: 0,
     rightSymbol: ' BGN',
+  );
+
+  final _opportunityController = MoneyMaskedTextController(
+    decimalSeparator: '.',
+    thousandSeparator: ',',
+    precision: 2,
+    initialValue: 0,
   );
 
   // === Helpers ===
@@ -114,71 +122,141 @@ class _MyHomePageState extends State<MyHomePage> {
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
-          child: Card(
-            elevation: 4.0,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Daily budget title
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 5.0),
-                    child: Text(
-                      'Daily Grocery Budget',
-                      style: const TextStyle(
-                        fontSize: 32.0,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.black87,
-                      ),
-                    ),
-                  ),
-                  // Display the days left in the month.
-                  Text(
-                    'Days left: ${_getRemainingDaysInMonth()}',
-                    style: const TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  // Remaining budget input field.
-                  Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32.0,
-                      vertical: 16.0,
-                    ),
-                    child: TextField(
-                      key: const Key('total_remaining_budget_input'),
-                      controller: _controller,
-                      keyboardType: TextInputType.number,
-                      onChanged: (_) => _calculateDailyBudget(),
-                      style: const TextStyle(fontSize: 24.0),
-                      decoration: const InputDecoration(
-                        labelText: 'Shared account budget',
-                        labelStyle: TextStyle(fontSize: 18.0),
-                        border: OutlineInputBorder(),
-                        contentPadding: EdgeInsets.symmetric(
-                          horizontal: 16.0,
-                          vertical: 24.0,
+          child: Column(
+            children: [
+              Card(
+                elevation: 4.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Daily budget title
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 5.0),
+                        child: Text(
+                          'Daily Grocery Budget',
+                          style: const TextStyle(
+                            fontSize: 32.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  if (_dailyBudget != null)
-                    Padding(
-                      padding: const EdgeInsets.only(top: 16.0),
-                      child: Text(
-                        'Daily budget: $_dailyBudget',
+                      // Display the days left in the month.
+                      Text(
+                        'Days left: ${_getRemainingDaysInMonth()}',
                         style: const TextStyle(
-                          fontSize: 24.0,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.green,
+                          fontSize: 18.0,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
-                    ),
-                ],
+                      // Remaining budget input field.
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 32.0,
+                          vertical: 16.0,
+                        ),
+                        child: TextField(
+                          key: const Key('total_remaining_budget_input'),
+                          controller: _controller,
+                          keyboardType: TextInputType.number,
+                          onChanged: (_) => _calculateDailyBudget(),
+                          style: const TextStyle(fontSize: 24.0),
+                          decoration: const InputDecoration(
+                            labelText: 'Shared account budget',
+                            labelStyle: TextStyle(fontSize: 18.0),
+                            border: OutlineInputBorder(),
+                            contentPadding: EdgeInsets.symmetric(
+                              horizontal: 16.0,
+                              vertical: 24.0,
+                            ),
+                          ),
+                        ),
+                      ),
+                      if (_dailyBudget != null)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 16.0),
+                          child: Text(
+                            'Daily budget: $_dailyBudget',
+                            style: const TextStyle(
+                              fontSize: 24.0,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.green,
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
               ),
-            ),
+              const SizedBox(height: 16.0),
+              Card(
+                elevation: 4.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Opportunity Cost',
+                        style: TextStyle(
+                          fontSize: 32.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 16.0),
+                      Row(
+                        children: [
+                          Expanded(
+                            flex: 2,
+                            child: TextField(
+                              controller: _opportunityController,
+                              keyboardType: TextInputType.number,
+                              style: const TextStyle(fontSize: 24.0),
+                              decoration: const InputDecoration(
+                                labelText: 'Amount',
+                                labelStyle: TextStyle(fontSize: 18.0),
+                                border: OutlineInputBorder(),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 16.0),
+                          Expanded(
+                            flex: 1,
+                            child: DropdownButtonFormField<String>(
+                              value: _selectedCurrency,
+                              decoration: const InputDecoration(
+                                border: OutlineInputBorder(),
+                                labelText: 'Currency',
+                              ),
+                              items: const [
+                                DropdownMenuItem(
+                                  value: 'BGN',
+                                  child: Text('BGN'),
+                                ),
+                                DropdownMenuItem(
+                                  value: 'EUR',
+                                  child: Text('EUR'),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() {
+                                    _selectedCurrency = value;
+                                  });
+                                }
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),
