@@ -1,10 +1,16 @@
+import 'dart:async';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:extended_masked_text/extended_masked_text.dart';
-import 'dart:io';
-import 'pages/profile_page.dart';
-import 'services/user_preferences_service.dart';
-import 'services/retirement_service.dart';
+
 import 'models/frequency_period.dart';
+
+import 'pages/profile_page.dart';
+
+import 'services/exponential_countdown.dart';
+import 'services/retirement_service.dart';
+import 'services/user_preferences_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -39,6 +45,7 @@ class MyHomePage extends StatefulWidget {
 enum PurchaseType { oneTime, recurring }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final _exponentialService = ExponentialCountdownService();
   final _prefsService = UserPreferencesService();
   final _retirementService = RetirementService();
   String? _profileImagePath;
@@ -58,6 +65,12 @@ class _MyHomePageState extends State<MyHomePage> {
   double? _opportunityTotal;
 
   bool _showOpportunityDetails = false;
+
+  // Countdown state
+  bool _isCountdownRunning = false;
+  DateTime? _countdownStartTime;
+  String _countdownValue = '0:00';
+  Timer? _countdownTimer;
 
   // === Controllers ===
   final _controller = MoneyMaskedTextController(
@@ -124,6 +137,48 @@ class _MyHomePageState extends State<MyHomePage> {
       _opportunityInterest = result.interest;
       _opportunityTotal = result.total;
     });
+  }
+
+  void _startCountdown() {
+    setState(() {
+      _isCountdownRunning = true;
+      _countdownStartTime = DateTime.now();
+      _countdownValue = _exponentialService.formatValue(
+        _exponentialService.calculateValue(0),
+      );
+    });
+
+    // Update twice per second (every 500ms)
+    _countdownTimer = Timer.periodic(const Duration(milliseconds: 500), (
+      timer,
+    ) {
+      if (_countdownStartTime != null) {
+        final now = DateTime.now();
+        final difference = now.difference(_countdownStartTime!);
+        final hours =
+            difference.inMilliseconds / (1000 * 60 * 60); // Convert to hours
+        final value = _exponentialService.calculateValue(-hours);
+
+        setState(() {
+          _countdownValue = _exponentialService.formatValue(value);
+        });
+      }
+    });
+  }
+
+  void _stopCountdown() {
+    _countdownTimer?.cancel();
+    setState(() {
+      _isCountdownRunning = false;
+      _countdownStartTime = null;
+      _countdownValue = '0:00';
+    });
+  }
+
+  @override
+  void dispose() {
+    _countdownTimer?.cancel();
+    super.dispose();
   }
 
   @override
@@ -447,6 +502,68 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                         ],
                       ],
+                    ],
+                  ),
+                ),
+              ),
+              // === Screen time countdown ===
+              const SizedBox(height: 16.0),
+              Card(
+                elevation: 4.0,
+                child: Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Text(
+                        'Screen time countdown',
+                        style: TextStyle(
+                          fontSize: 32.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      Text(
+                        _countdownValue,
+                        style: const TextStyle(
+                          fontSize: 42.0,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.purple,
+                        ),
+                      ),
+                      const SizedBox(height: 24.0),
+                      ElevatedButton(
+                        onPressed:
+                            _isCountdownRunning
+                                ? _stopCountdown
+                                : _startCountdown,
+                        style: ElevatedButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32.0,
+                            vertical: 12.0,
+                          ),
+                          backgroundColor:
+                              _isCountdownRunning ? Colors.red : Colors.green,
+                        ),
+                        child: Text(
+                          _isCountdownRunning ? 'Stop' : 'Start',
+                          style: const TextStyle(
+                            fontSize: 18.0,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 8.0),
+                      if (_countdownStartTime != null)
+                        Text(
+                          'Started at: ${_countdownStartTime!.hour}:${_countdownStartTime!.minute.toString().padLeft(2, '0')}:${_countdownStartTime!.second.toString().padLeft(2, '0')}',
+                          style: const TextStyle(
+                            fontSize: 14.0,
+                            color: Colors.grey,
+                          ),
+                        ),
                     ],
                   ),
                 ),
